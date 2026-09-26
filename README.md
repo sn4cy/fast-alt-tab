@@ -1,60 +1,64 @@
 # Fast Alt Tab
 
-Hyprland向けの軽量な、Windows風Alt+Tabウィンドウ切り替えアプリ。
-QuickshellのUIと小さなC製クライアントをUNIXソケットで接続し、キー入力ごとのQtやPython起動を省きます。
+A lightweight, Windows-style Alt+Tab window switcher for Hyprland.
+A Quickshell interface communicates with a small C client over a UNIX socket,
+avoiding the cost of starting Qt or Python for every key press.
 
-## 操作
+## Controls
 
-- **Alt + Tab**：現在のワークスペースのウィンドウを最近使用した順に選択。
-- **Alt + Shift + Tab**：逆順に選択。
-- **Altを離す**：選択したウィンドウに切り替え。
-- **Alt + Escape**：キャンセル。
-- カードをクリックして切り替えることもできます。
+- **Alt + Tab**: Cycle through windows in the current workspace, ordered by recent use.
+- **Alt + Shift + Tab**: Cycle in reverse.
+- **Release Alt**: Switch to the selected window.
+- **Alt + Escape**: Cancel the selection.
+- Click a card to switch directly to that window.
 
-最初のTabで直前のウィンドウを選択します。100ms以内の素早い操作ではパネルを表示しません。
-UIは半透明のダークパネル、静止プレビュー、淡いブルーの選択枠、アプリのアイコンを使用します。
-見出しや操作説明は表示しません。
+The first Tab selects the previously used window. Quick switches completed within
+100 ms do not display the panel. The interface uses a translucent dark panel,
+static window previews, a soft blue selection border, and application icons.
+There are no headings or keyboard hints in the panel.
 
-## 動作環境
+## Requirements
 
 - Linux / Wayland
-- **Hyprland 0.56.2のLua設定環境**で確認（従来のhyprland.conf向けではありません）
-- **Quickshell 0.3.1**で確認
-- Cコンパイラ、systemdのユーザーサービス
+- **Hyprland 0.56.2 with Lua configuration**, the tested environment. The included
+  configuration example uses the Lua API rather than the traditional `hyprland.conf` syntax.
+- **Quickshell 0.3.1**, the tested version
+- A C compiler and systemd user services
 
-## インストール
+## Installation
 
-リポジトリのディレクトリで実行します。
+Run the installer from the repository directory:
 
 ```sh
 bash install.sh
 ```
 
-`examples/hyprland.lua`を既存のHyprland Lua設定へ追加してください。
-既存のAlt+Tab設定がある場合は置き換えます。`transparent = true`はAlt解放時の確定に必要です。
+Add the bindings from `examples/hyprland.lua` to your existing Hyprland Lua
+configuration. Replace existing Alt+Tab bindings if present.
+`transparent = true` is required for selection confirmation when Alt is released.
 
 ```sh
 systemctl --user restart fast-alt-tab.service
 hyprctl reload
 ```
 
-次回以降は設定例の起動フックでサービスが起動します。
-インストーラーはHyprland設定を自動編集しません。
+The startup hook in the example starts the service in subsequent sessions.
+The installer leaves editing your Hyprland configuration to you.
 
-## ファイル
+## Files
 
-| ファイル | 内容 |
+| File | Purpose |
 | --- | --- |
-| `shell.qml` | UI、ウィンドウ一覧、選択、確定、ソケットサーバー |
-| `client.c` | キー操作を送る小さなクライアント |
-| `install.sh` | コンパイルとユーザー領域へのインストール |
-| `examples/hyprland.lua` | 起動フックとキー設定 |
+| `shell.qml` | Interface, window list, selection, confirmation, and socket server |
+| `client.c` | Small client that sends keyboard actions |
+| `install.sh` | Compilation and installation into user directories |
+| `examples/hyprland.lua` | Startup hook and key bindings |
 
-Ghostty、Firefox、Zenにはインストール済みのアプリ付属アイコンを使用します。
-ZenのパスはArchの`zen-browser-bin`向けです。その他はdesktop entryからアイコンを取得します。
-アイコン画像はこのリポジトリに同梱していません。
+Ghostty, Firefox, and Zen use application icons installed on your system.
+The Zen icon path targets Arch Linux's `zen-browser-bin` package. Other applications
+use icons from their desktop entries. Icon images are not bundled in this repository.
 
-## 状態確認・停止
+## Status and stopping the service
 
 ```sh
 ~/.local/bin/fast-alt-tab status
@@ -62,12 +66,13 @@ journalctl --user -u fast-alt-tab.service
 systemctl --user stop fast-alt-tab.service
 ```
 
-削除する場合は、まず追加したキー設定と起動フックを削除し、サービスを停止してください。
-その後、`~/.local/bin/fast-alt-tab`、設定ディレクトリの`hypr/alt-tab`と
-`systemd/user/fast-alt-tab.service`を削除し、`systemctl --user daemon-reload`を実行します。
+To uninstall, remove the added bindings and startup hook, then stop the service.
+Delete `~/.local/bin/fast-alt-tab`, `hypr/alt-tab` in your configuration directory,
+and `systemd/user/fast-alt-tab.service` in that same directory.
+Run `systemctl --user daemon-reload` afterward.
 
-## 制限
+## Limitations
 
-動作確認は上記バージョンと単一モニター環境で実施しています。
-プレビューは静止画で、選択中に継続更新しません。
-一部アプリではdesktop entryやアイコンが見つからず汎用アイコンになる場合があります。
+Testing was performed with the versions listed above on a single monitor.
+Window previews are static snapshots and do not continuously update during selection.
+Applications without a matching desktop entry or available icon may use a generic icon.
